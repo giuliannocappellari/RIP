@@ -6,9 +6,10 @@ from time import sleep, time
 
 class Roteador:
     def __init__(self, rot_ip):
-        self.tabela = {
-            "192.168.100.11": {"Métrica": 1, "Saída": "192.168.100.11"}
-        }  # self.load_to_table()
+        # self.tabela = {
+        #     "192.168.100.11": {"Métrica": 1, "Saída": "192.168.100.11"}
+        # }
+        self.tabela = self.load_to_table()
         self.ip_roteador = rot_ip
         self.vizinhos_recebidos = {}
         self.ultima_atualizacao = {}
@@ -40,8 +41,8 @@ class Roteador:
         sock.sendto(message, (ip, 9000))
 
     def decode_message(self, message: str, sender: str):
-        print(message)
-        print(sender)
+        print(f"Message recieved {message}")
+        print(f"Sender recieved {sender}")
         if message.startswith("*"):
             novo_ip = message[1:]
             if novo_ip not in self.tabela:
@@ -72,9 +73,8 @@ class Roteador:
     def get_messages(self):
         print("Checking messages")
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.bind(('192.168.100.11', 9000))
+        sock.bind((self.ip_roteador, 9000))
         while True:
-            print("baba")
             data, addr = sock.recvfrom(1024)
             self.decode_message(data.decode("utf-8"), addr[0])
 
