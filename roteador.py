@@ -36,7 +36,7 @@ class Roteador:
 
     def send_message(self, ip):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        print(f"Sending the message: {self.tabela_2_message()} to {ip}")
+        print(f"\nSending the message: {self.tabela_2_message()} to {ip}")
         message = self.tabela_2_message().encode("utf-8")
         sock.sendto(message, (ip, 9000))
 
@@ -61,6 +61,8 @@ class Roteador:
                     self.tabela[ip] = {"Métrica": metric + 1, "Saída": sender}
                     self.atualiza_tabela()
             self.vizinhos_recebidos[sender] = time()
+        elif message.startswith("!"):
+            self.handle_text_message(message=message)
 
     def roteia(self):
         while True:
@@ -71,7 +73,7 @@ class Roteador:
             sleep(15)
 
     def get_messages(self):
-        print("Checking messages")
+        print("\nChecking messages")
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind((self.ip_roteador, 9000))
         while True:
@@ -93,9 +95,15 @@ class Roteador:
             del self.vizinhos_recebidos[ip]
 
     def atualiza_tabela(self):
-        print(f"Tabela de roteamento atualizada para o roteador {self.ip_roteador}:")
+        print("Tabela de roteamento atualizada")
         for ip, info in self.tabela.items():
             print(f"IP: {ip}, Métrica: {info['Métrica']}, Saída: {info['Saída']}")
+
+    def evia_mensagem_customizada(self):
+        while True:
+            ip_destino = input("Escreva o ip de destino: ")
+            msg = input("Escreva a mensagem: \n")
+            self.enviar_mensagem_texto(ip_destino=ip_destino, mensagem=msg)
 
     def enviar_mensagem_texto(self, ip_destino: str, mensagem: str):
         if ip_destino in self.tabela:
@@ -119,10 +127,26 @@ class Roteador:
             )
             self.enviar_mensagem_texto(ip_destino, texto)
 
+    def start_roteador(self):
+        while True:
+            print("Digite o numero da opção desejada: ")
+            print(" _________________________________")
+            print("|1| Começar em uma rede existente |")
+            print("|2| Começar uma rede nova .       |")
+            print(" _________________________________")
+            opcao = input("Opção desejada: ")
+            if opcao in ["1", "2"]:
+                break
+            else:
+                print("Opção Invalidada, digite novamente.")
+        if opcao == "1":
+            self.anuncia_message(self.ip_roteador)
+
 
 if __name__ == "__main__":
     roteador = Roteador(rot_ip=sys.argv[1])
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+    roteador.start_roteador()
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
         executor.submit(roteador.get_messages)
         executor.submit(roteador.roteia)
-        
+        executor.submit(roteador.evia_mensagem_customizada)
