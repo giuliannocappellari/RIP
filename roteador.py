@@ -6,9 +6,6 @@ from time import sleep, time
 
 class Roteador:
     def __init__(self, rot_ip):
-        # self.tabela = {
-        #     "192.168.100.11": {"Métrica": 1, "Saída": "192.168.100.11"}
-        # }
         self.tabela = self.load_to_table()
         self.ip_roteador = rot_ip
         self.vizinhos_recebidos = {}
@@ -128,19 +125,9 @@ class Roteador:
             self.enviar_mensagem_texto(ip_destino, texto)
 
     def start_roteador(self):
-        while True:
-            print("Digite o numero da opção desejada: ")
-            print(" _________________________________")
-            print("|1| Começar em uma rede existente |")
-            print("|2| Começar uma rede nova .       |")
-            print(" _________________________________")
-            opcao = input("Opção desejada: ")
-            if opcao in ["1", "2"]:
-                break
-            else:
-                print("Opção Invalidada, digite novamente.")
-        if opcao == "1":
-            self.anuncia_message(self.ip_roteador)
+        if len(self.tabela) > 0:
+            for ip in list(self.tabela.keys()):
+                self.anuncia_message(ip=ip)
 
 
 if __name__ == "__main__":
