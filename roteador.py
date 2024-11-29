@@ -42,7 +42,7 @@ class Roteador:
         print(f"Sender recieved {sender}")
         if message.startswith("*"):
             novo_ip = message[1:]
-            if novo_ip not in self.tabela:
+            if (novo_ip not in self.tabela) and (novo_ip != self.ip_roteador):
                 self.tabela[novo_ip] = {"Métrica": 1, "Saída": sender}
                 self.atualiza_tabela()
         elif message.startswith("#"):
@@ -51,12 +51,13 @@ class Roteador:
                 ip, metric = msg.split("-")
                 metric = int(metric)
                 ip_from_tab = self.tabela.get(ip)
-                if ip_from_tab is None:
-                    self.tabela[ip] = {"Métrica": metric + 1, "Saída": sender}
-                    self.atualiza_tabela()
-                elif metric + 1 < int(ip_from_tab["Métrica"]):
-                    self.tabela[ip] = {"Métrica": metric + 1, "Saída": sender}
-                    self.atualiza_tabela()
+                if ip != self.ip_roteador:
+                    if (ip_from_tab is None):
+                            self.tabela[ip] = {"Métrica": metric + 1, "Saída": sender}
+                            self.atualiza_tabela()
+                    elif metric + 1 < int(ip_from_tab["Métrica"]):
+                        self.tabela[ip] = {"Métrica": metric + 1, "Saída": sender}
+                        self.atualiza_tabela()
             self.vizinhos_recebidos[sender] = time()
         elif message.startswith("!"):
             self.handle_text_message(message=message)
