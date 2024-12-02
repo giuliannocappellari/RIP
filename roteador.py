@@ -9,7 +9,6 @@ class Roteador:
         self.tabela = self.load_to_table()
         self.ip_roteador = rot_ip
         self.vizinhos_recebidos = {}
-        self.ultima_atualizacao = {}
 
     def load_to_table(self) -> dict[str, dict[str, str | int]]:
         with open("roteadores.txt", "r") as f:
@@ -37,15 +36,19 @@ class Roteador:
         message = self.tabela_2_message().encode("utf-8")
         sock.sendto(message, (ip, 9000))
 
-    def decode_message(self, message: str, sender: str):
+    def print_message(self, message: str, sender: str) -> None:
         print(f"Message recieved {message}")
         print(f"Sender recieved {sender}")
+
+    def decode_message(self, message: str, sender: str):
         if message.startswith("*"):
+            self.print_message(message=message, sender=sender)
             novo_ip = message[1:]
             if (novo_ip not in self.tabela) and (novo_ip != self.ip_roteador):
                 self.tabela[novo_ip] = {"Métrica": 1, "Saída": sender}
                 self.atualiza_tabela()
         elif message.startswith("#"):
+            self.print_message(message=message, sender=sender)
             list_of_messages = message.split("#")[1:]
             for msg in list_of_messages:
                 ip, metric = msg.split("-")
@@ -78,19 +81,22 @@ class Roteador:
             self.decode_message(data.decode("utf-8"), addr[0])
 
     def verifica_vizinhos(self):
-        sleep(35)
-        tempo_atual = time()
-        remover = [
-            ip
-            for ip, last_time in self.vizinhos_recebidos.items()
-            if tempo_atual - last_time > 35
-        ]
-        for ip in remover:
-            self.tabela = {
-                dest: val for dest, val in self.tabela.items() if val["Saída"] != ip
-            }
-            self.atualiza_tabela()
-            del self.vizinhos_recebidos[ip]
+        while True:
+            print("verificando vizinhos")
+            sleep(35)
+            tempo_atual = time()
+            remover = [
+                ip
+                for ip, last_time in self.vizinhos_recebidos.items()
+                if tempo_atual - last_time > 35
+            ]
+            for ip in remover:
+                self.tabela = {
+                    dest: val for dest, val in self.tabela.items() if val["Saída"] != ip
+                }
+                self.atualiza_tabela()
+                print(f"IP DELETADO POR INATIVIDADE {ip}")
+                del self.vizinhos_recebidos[ip]
 
     def atualiza_tabela(self):
         print("Tabela de roteamento atualizada")
@@ -134,7 +140,7 @@ class Roteador:
 if __name__ == "__main__":
     roteador = Roteador(rot_ip=sys.argv[1])
     roteador.start_roteador()
-    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         executor.submit(roteador.get_messages)
         executor.submit(roteador.roteia)
         executor.submit(roteador.evia_mensagem_customizada)
