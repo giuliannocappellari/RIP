@@ -52,9 +52,9 @@ class Roteador:
                 metric = int(metric)
                 ip_from_tab = self.tabela.get(ip)
                 if ip != self.ip_roteador:
-                    if (ip_from_tab is None):
-                            self.tabela[ip] = {"Métrica": metric + 1, "Saída": sender}
-                            self.atualiza_tabela()
+                    if ip_from_tab is None:
+                        self.tabela[ip] = {"Métrica": metric + 1, "Saída": sender}
+                        self.atualiza_tabela()
                     elif metric + 1 < int(ip_from_tab["Métrica"]):
                         self.tabela[ip] = {"Métrica": metric + 1, "Saída": sender}
                         self.atualiza_tabela()
@@ -67,7 +67,6 @@ class Roteador:
             ips = [ip for ip in self.tabela.keys()]
             with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
                 executor.map(self.send_message, ips)
-            self.verifica_vizinhos()
             sleep(15)
 
     def get_messages(self):
@@ -79,6 +78,7 @@ class Roteador:
             self.decode_message(data.decode("utf-8"), addr[0])
 
     def verifica_vizinhos(self):
+        sleep(35)
         tempo_atual = time()
         remover = [
             ip
@@ -138,3 +138,4 @@ if __name__ == "__main__":
         executor.submit(roteador.get_messages)
         executor.submit(roteador.roteia)
         executor.submit(roteador.evia_mensagem_customizada)
+        executor.submit(roteador.verifica_vizinhos)
