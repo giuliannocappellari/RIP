@@ -8,7 +8,7 @@ class Roteador:
     def __init__(self, rot_ip):
         self.tabela = self.load_to_table()
         self.ip_roteador = rot_ip
-        self.vizinhos_recebidos = {}
+        self.vizinhos_recebidos = {ip: time() for ip in self.tabela.keys()}
 
     def load_to_table(self) -> dict[str, dict[str, str | int]]:
         with open("roteadores.txt", "r") as f:
@@ -82,8 +82,8 @@ class Roteador:
 
     def verifica_vizinhos(self):
         while True:
-            print("verificando vizinhos")
-            sleep(35)
+            # print("verificando vizinhos")
+            # sleep(35)
             tempo_atual = time()
             remover = [
                 ip
